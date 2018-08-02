@@ -1,0 +1,20 @@
+Plop1:
+  couleur: Bleu
+  spec: ""
+  menu:
+    couleur: vert
+    element:
+      - "Installer"
+      - "Supprimer"
+Plop2:
+  couleur: Rouge
+  spec: ""
+  menu:
+    element:
+      - Installer:
+         couleur: jaune-orangé
+         spec: ""
+         menu:
+           - Menu1
+           - Menu2
+      - Supprimer
