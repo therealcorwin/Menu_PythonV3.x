@@ -15,6 +15,7 @@ Plop2:
          color: reddish-yellow
          spec: ""
          menu:
-           - Menu1
-           - Menu2
+           element:
+             - Menu1
+             - Menu2
       - *delete
