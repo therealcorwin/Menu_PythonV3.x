@@ -57,6 +57,6 @@ class Config:
 
 
 if __name__ == '__main__':
-    config = Config("menu1.yaml", "ressource")
+    config = Config("menu1.yaml", "config")
     config.parse_config_file()
     print(config.setup)
