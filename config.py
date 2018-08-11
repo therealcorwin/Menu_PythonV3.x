@@ -1,9 +1,10 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-"""Fichier de configuration du Menu CLI
+"""Configuration class for the CLI Menu
 
-Module permettant de préparer le menu en prenant en compte toutes ses spécificitées
+This module allows to preprare the menu configuration in order be well dressed,
+taking all the custom specifications into account.
 """
 
 import os
@@ -12,50 +13,50 @@ import yaml
 
 
 class Config:
-    """Classe de configuration du menu
+    """Menu configuration class
 
     Attributs :
-        nom_fichier : Nom complet du fichier de configuration
-        repertoire : Nom du répertoire contenant le fichier de configuration
-        menu_conf : Configuration du menu sous forme de Dictionnaire
+        filename : the complete filename of the configuration file
+        folder : the directory name which contains the configuration file
+        setup : a dictionary object containing all the setup items
     """
-    def __init__(self, nom_fichier, repertoire):
-        """Initialise la classe de configuration
+    def __init__(self, filename, folder):
+        """Initialize the class
 
-            :param nom_fichier: Nom du fichier complet lié à son extension
-            :param repertoire: Nom du répertoire contenant le(s) fichier(s) de configuration
+            :param filename: the filename of the file with its extension
+            :param folder: the name of the directory which contains the configuration file
         """
-        # Testons d'abord la validité du fichier
-        fichier, extension = os.path.splitext(nom_fichier)
+        # First, we need to validate the file type by testing its extension
+        file, extension = os.path.splitext(filename)
         if extension != ".yaml":
-            raise Exception("Fichier inconnu, l'extension .yaml doit est utilisé !")
+            raise Exception("Unrecognised file extension! This module only supports .yaml files!")
 
         # Attributs
-        self.nom_fichier = nom_fichier
-        self.repertoire = repertoire
+        self.filename = filename
+        self.folder = folder
 
     def parse_config_file(self):
-        """Analyse du fichier de configuration
+        """Parse the configuration file
 
-        Conversion du contenu du fichier en un objet Python du type dictionnaire
-        contenant tous les paramètres nécessaires à la construction du menu.
+        Converting the configuration file into a Python dictionnary object which
+        contains all the necesary parameters to set up the menu properly.
 
-        Le fichier texte devra respecter la norme d'écriture de fichier YAML.
-        Pour plus d'information : 'https://pyyaml.org/wiki/PyYAML'
+        The text file has to respect the YAML writing rules.
+        For more information: 'https://pyyaml.org/wiki/PyYAML'
 
-        :return: L'objet dictionnaire de YAML
+        :return: The YAML dictionary object
         """
-        # Chemin du fichier complet de configuration
-        fichier_config = os.path.join(os.path.dirname(os.path.realpath(__file__)), \
-                                        self.repertoire, self.nom_fichier)
+        # Full path of the configuration file
+        config_file = os.path.join(os.path.dirname(os.path.realpath(__file__)), \
+                                        self.folder, self.filename)
 
-        # Traitement du fichier de configuration
-        with open(fichier_config, mode="r", encoding="utf-8") as f:
-            self.menu_conf = yaml.load(f.read())
-        return self.menu_conf
+        # Parsing the Yaml file
+        with open(config_file, mode="r", encoding="utf-8") as f:
+            self.setup = yaml.load(f.read())
+        return self.setup
 
 
 if __name__ == '__main__':
-    config = Config("menu1.yaml", "ressource")
+    config = Config("menu1.yaml", "config")
     config.parse_config_file()
-    print(config.menu_conf)
+    print(config.setup)
