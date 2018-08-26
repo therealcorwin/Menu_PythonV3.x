@@ -89,7 +89,6 @@ class Menu:
 
     Attributes:
         - widht : the width of the menu display
-        - error: raised when the user enters an incorrect input
         - breaked: True when the escape menu is activated
         - color: a list of all he used colors
         - title: the title of the main menu
@@ -114,8 +113,7 @@ class Menu:
         - escape_menu: display the escape menu
     """
     width = 60  # default width of the menu display
-    error = 0
-    breaked = 0
+    breaked = False
     # list of the color code list
     color = {
         "error":"red",
@@ -126,7 +124,7 @@ class Menu:
         "title": "yellow",
         "input": "yellow"
     }
-    
+
     def __init__(self, menu_name, structure):
         """Initialize the Menu class
 
@@ -296,6 +294,7 @@ Version : {colored(version, self.color["version"])}
         while True:
             print(self) if not self.breaked else print(self.escape_menu())
             self.walk_to_next_menu_list(self.keyboard_process(error))
+            error = None
 
 
 if __name__ == '__main__':
