@@ -8,8 +8,8 @@ from termcolor import cprint, colored
 
 
 class Menu_item:
-    def __init__(self, name, index, structure):
-        self.name = self.title = name
+    def __init__(self, item_name, index, structure):
+        self.name = self.title = item_name
         self.index = index
         self.structure = structure
 
@@ -27,15 +27,17 @@ class Menu_item:
 
 
 class Sub_menu_item(Menu_item):
-    def __init__(self, parent, name, index, structure):
-        super().__init__(name, index, structure)
+    def __init__(self, parent, item_name, index, structure):
+        super().__init__(item_name, index, structure)
         self.parent = parent
 
 
 class Menu:
     width = 60
+    error = 0
+    breaked = 0
     color = {
-        "warning":"red",
+        "error":"red",
         "border":"green",
         "version":"blue",
         "menu":"cyan",
@@ -44,8 +46,8 @@ class Menu:
         "input": "yellow"
     }
 
-    def __init__(self, name, structure):
-        self.title = name
+    def __init__(self, menu_name, structure):
+        self.title = menu_name
         self.main_color = self.color["menu"]
         self.structure = structure
         self.walk_to_next_menu_list()
@@ -74,43 +76,50 @@ class Menu:
         self.current_menu = self.walk[-1]
         self.name = self.current_menu[self.entry - 1].parent.name if len(self.walk) > 1 else self.title
 
-
-    def keyboard_process(self):
-        breaked = 0
+    def keyboard_process(self, error):
+        cprint(f"{' '*self.spaces}{error}", self.color["error"]) if error else print()  # display the error line
         while True:
             try:
-                reply = input(colored(f"\n{' '*self.spaces}Choice : ", self.color["input"]))
+                reply = input(colored(f"{' '*self.spaces}Choice : ", self.color["input"]))
             except KeyboardInterrupt:
-                    print(self.escape_menu())
-                    if breaked: exit()
-                    else: breaked = True
+                    # the[ctrl]+c exception is catched
+                    if self.breaked: exit()  # exit if [ctrl]+c is pressed 2x
+                    else:
+                        self.breaked = True  # flag two detect the escape_menu state
+                        self()  # display the escape menu
             else:
-                if not reply:
-                    cprint(f"\n{' '*self.spaces}Please enter your choice!", self.color["warning"])
-                    continue
+                if not reply: self("Please enter your choice!")  # blank line is returned
                 try:
                     self.entry = int(reply)
-                except ValueError:
-                    if breaked:
+                except ValueError:  # other than a number is entered
+                    if self.breaked:
+                        # escape menu state
                         if reply.lower()[0] == "y": exit(0)
-                        elif reply.lower()[0] == "n": self()
-                        else: cprint(f"\n{' '*self.spaces}Yes(y) or No(n)!", self.color["warning"])
-                    else:
-                        cprint(f"\n{' '*self.spaces}Only numbers are allowed!", self.color["warning"])
+                        elif reply.lower()[0] == "n":
+                            self.breaked = False
+                            self("")  # return two the last menu state
+                        else: self("Yes(y) or No(n)!")  # other than "y" or "n" and not a number is entered
+                    else: self("Only numbers are allowed!")
                 else:
-                    if breaked:
-                        cprint(f"\n{' '*self.spaces}Yes(y) or No(n)!", self.color["warning"])
+                    # a number is entered
+                    if self.breaked:  # on the escape menu...
+                        self("Yes(y) or No(n)!")
                     elif self.entry > len(self.current_menu):
-                        cprint(f"\n{' '*self.spaces}exceed the value!", self.color["warning"])
-                    else: return self.entry
+                        self("Exceed the value!")
+                    else:
+                        self.breaked = False
+                        return self.entry
 
     @staticmethod
-    def clear():
-        _ = system('cls') if name == 'nt' else system('clear')
+    def _clear():
+        if name == 'nt':
+            system('cls')
+        else:
+            system('clear')
 
     def _header_footer(main_print):
         def _wraper(self) :
-            self.clear()
+            self._clear()
             display = f"""
 {self.header:{self.border}^{self.width}}
 {colored(self.name, self.color["title"])}
@@ -131,14 +140,14 @@ Version : {colored(version, self.color["version"])}
         menu = "\t\n".join(f"\t{colored(e, e.color)}" for e in self.current_menu)
         return f"{back}{colored(menu, self.main_color)}"
 
-    def __call__(self):
+    def __call__(self, error=0, escape_menu=False):
         while True:
-            print(self)
-            self.walk_to_next_menu_list(self.keyboard_process())
+            print(self) if not self.breaked else print(self.escape_menu())
+            self.walk_to_next_menu_list(self.keyboard_process(error))
 
 
 if __name__ == '__main__':
-    config = [
+    structure = [
         {"Plop1": {"color": "red", "sub-menu": [
             {"Installer1": {"sub-menu": [
                 {"sous-menu1": {"color": "magenta"}}, {"Sous-menu2": {}}]}},
@@ -146,6 +155,6 @@ if __name__ == '__main__':
         {"Plop2": {"color": "magenta", "sub-menu": [
             {"Installer2": {}}, {"Supprimer2": {}}]}}]
 
-    menu = Menu("Mon menu", config)
+    menu = Menu("Mon menu", structure)
     menu.set_config("header", "footer", "=")
     menu()
