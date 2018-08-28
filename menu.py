@@ -219,7 +219,7 @@ class Menu:
             if not self.keyboard_input:
                 self.select = 1  # the arrow is initially set for the first menu element selection
 
-    def keyboard_process(self, error):
+    def keyboard_process(self, error=""):
         """Keyboard process
 
         Prompt the user to select the menu item.
@@ -373,7 +373,7 @@ Version : {colored(version, self.color["version"])}
         """
         if self.escape:  # it exits if [ctrl]+c is pressed twice
             # clear the command buffer history in order to avoid executing command line on exit
-            _ = system("doskey /listsize=0") if name == "nt" else system("")  # os.name is used to detect the system
+            system("doskey /listsize=0") if name == "nt" else system("")  # os.name is used to detect the system
             exit()
         else:
             if not self.keyboard_input:
