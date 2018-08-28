@@ -120,7 +120,6 @@ class Menu:
         - set_config: set the configuration of the menu display (header and footer names, etc...)
         - set_structure: parse the configuration parameters
         - walk_next_menu_list: set *current_menu* and *name* variables to display the menu correctly
-        - walk_escape_menu_list: set: handle the escape menu
         - keyboard_process: the keyboard control stuffs
         - _clear: clear the screen
         - _menu_display: decorator to display the menu
@@ -165,7 +164,7 @@ class Menu:
         :param keyboard_input (boolean): set the keyboard control method
             (True -> prompt; False -> "up" / "down" arrow keys are used)
         """
-        self.border = border
+        self.border = border[0]
         self.header = colored(f" {header} ", self.color["border"])
         self.footer = colored(f" {footer} ", self.color["border"])
 
@@ -190,34 +189,35 @@ class Menu:
         """
         return [Menu_item(k, i, v) for i, el in enumerate(self.structure, 1) for k, v in el.items()]
 
-    def walk_escape_menu_list(self, entry=None):
-        if entry == "y":
-            self.escape_event()
-        else:
-            self.escape = False
-
     def walk_next_menu_list(self, entry=None):
         """Menu walker
 
-        It sets *current_menu* and *name* in order to display the menu properly
+        It sets *current_menu* and *name* in order to display the menu properly.
+        While *escape* is True, the escape is shown and handled.
 
         :param entry: (int) the index of the menu item entered by the user
         """
-        # first call
-        if not hasattr(self, "walk"):
-            self.walk = self.current_menu = [self.set_structure()]
-        elif entry:
-            if self.current_menu[entry - 1].has_sub_menu():
-                self.walk.append(self.current_menu[entry - 1].sub_menu)
-        elif len(self.walk) > 1:  # reply = 0 (back to parent menu)
-            del self.walk[-1]
-        if self.walk[-1] != self.current_menu:
-            self.current_menu = self.walk[-1]
-            # At the root menu the name is setted to title; within a sub-menu item, it is setted to parent item name
-            self.name = self.current_menu[entry - 1].parent.name if len(self.walk) > 1 else self.title
+        if self.escape:
+            # within the escape menu
+            if entry == "y": self.escape_event()
+            else: self.escape = False
+        else:
+            # first call
+            if not hasattr(self, "walk"):
+                self.walk = self.current_menu = [self.set_structure()]
+            elif len(self.walk) > 1 and ((entry > len(self.current_menu) and self.keyboard_input == False) or (not entry and self.keyboard_input)):  # reply = 0 (back to parent menu)
+                entry = 0
+                del self.walk[-1]
+            elif entry:
+                if self.current_menu[entry - 1].has_sub_menu():
+                    self.walk.append(self.current_menu[entry - 1].sub_menu)
+            if self.walk[-1] != self.current_menu:
+                self.current_menu = self.walk[-1]
+                # At the root menu the name is setted to title; within a sub-menu item, it is setted to parent item name
+                self.name = self.current_menu[entry - 1].parent.name if len(self.walk) > 1 else self.title
 
-            if not self.keyboard_input:
-                self.select = 1  # the arrow is initially set for the first menu element selection
+                if not self.keyboard_input:
+                    self.select = 1  # the arrow is initially set for the first menu element selection
 
     def keyboard_process(self, error=""):
         """Keyboard process
@@ -303,18 +303,18 @@ class Menu:
             else:
                 try:
                     while self.pressed_key == None:  # select the menu item by using the keyboard arrow keys
-                        if is_pressed(KEY_DOWN) and  self.select < len(self.current_menu):
+                        if is_pressed(KEY_DOWN) and ((self.select < len(self.current_menu) and len(self.walk) == 1)
+                                                                              or (self.select < len(self.current_menu) + 1 and len(self.walk) > 1)):
                             self.pressed_key = KEY_DOWN
                             if not self.escape: self.select += 1
-                            else: self.escape_select += "n"
-                        elif is_pressed(KEY_UP) and ((self.select and len(self.walk) > 1)
-                                                                        or (self.select > 1 and len(self.walk) == 1)):
+                            else: self.escape_select = "n"
+                        elif is_pressed(KEY_UP) and self.select > 1:
                             self.pressed_key = KEY_UP
                             if not self.escape: self.select -= 1
-                            else: self.escape_select += "y"
+                            else: self.escape_select = "y"
                         elif is_pressed("enter"):
                             self.pressed_key = "enter"
-                            if self.select and not self.current_menu[self.select - 1].has_sub_menu():
+                            if self.select <= len(self.current_menu) and self.select and not self.current_menu[self.select - 1].has_sub_menu():
                                 self("No sub-menu available!")
                 except KeyboardInterrupt:
                     # the[ctrl]+c interruption is caught
@@ -390,10 +390,10 @@ Version : {colored(version, self.color["version"])}
 
         :return: the string of the main menu
         """
-        back = f"\t{'0.' if self.keyboard_input else '→' if self.select == 0 else ' '} Back\n" if len(self.walk) > 1 else "\n"
+        back = f"\n\t{'0.' if self.keyboard_input else '→' if self.select == len(self.walk[-1])+1 else ' '} Back\n" if len(self.walk) > 1 else ""
         menu = "\t\n".join([colored(f"\t{f'{e.index}.' if self.keyboard_input else '→' if self.select == e.index else ' '} "
                                                     f"{e.name}", e.color) for e in self.current_menu])
-        return f"{back}{colored(menu, self.main_color)}\n"
+        return f"\n{colored(menu, self.main_color)}\n{back}"
 
     def __call__(self, error=None, escape_menu=False):
         """This instance class is now callable as a function
@@ -406,8 +406,7 @@ Version : {colored(version, self.color["version"])}
         # main loop
         while True:
             print(self) if not self.escape else print(self.escape_menu())
-            self.walk_next_menu_list(self.keyboard_process(error))  if not self.escape \
-                else self.walk_escape_menu_list(self.keyboard_process())
+            self.walk_next_menu_list(self.keyboard_process(error))
             error = None
 
 
@@ -426,6 +425,6 @@ if __name__ == '__main__':
             {"Supprimer2": {}}]}}]
 
     menu = Menu("Mon menu", structure)
-    menu.set_config("header", "footer", "=", False)  # setting up the menu (False for keyboard style) - CLAVIER FLECHES
-    #menu.set_config("header", "footer", "=")  # DECOMMENTER POUR LE STYLE CLAVIER ORDINAIRE
+    #menu.set_config("header", "footer", "=1", True)  # setting up the menu (False for keyboard style) - CLAVIER FLECHES
+    menu.set_config("header", "footer", "=")  # DECOMMENTER POUR LE STYLE CLAVIER ORDINAIRE
     menu()  # call and display the menu
