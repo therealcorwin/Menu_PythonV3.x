@@ -2,7 +2,7 @@
 """
 CLI Menu
 """
-version = 0.1
+version = 0.2
 """TODO
 see either on Linux or Mac the key history reaction on each onw terminal
 """
@@ -264,14 +264,10 @@ class Menu:
             self._clear()
             title = self.name if not self.escape else "Quit?"
             display = f"""
-{self.header:{self.border}^{self.width}}
-
-{colored(title, self.color["title"])}
-
-{main_print(self)}
-
-Version : {colored(version, self.color["version"])}
-
+{self.header:{self.border}^{self.width}}\n\n
+{colored(title, self.color["title"])}\n
+{main_print(self)}\n\n
+Version : {colored(version, self.color["version"])}\n
 {self.footer:{self.border}^{self.width}}"""
             return display.replace("\n", f"\n{' '*self.spaces}")
         return _wraper
@@ -344,7 +340,7 @@ if __name__ == '__main__':
                 {"sous-menu1": {"color": "magenta", "sub-menu": [
                     {"Sous-sous-menu1": {}},
                     {"Sous-sous-menu2": {}},
-                    {"Sous-sous-menu3": {"command":"test.bat Jean", "color": "red"}}]}},
+                    {"Sous-sous-menu3": {"command":"fichier.bat /arguments", "color": "red"}}]}},
                 {"Sous-menu2": {}}]}},
             {"Supprimer1": {}}]}},
         {"Plop2": {"color": "magenta", "sub-menu": [
