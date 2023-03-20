@@ -260,9 +260,9 @@ class Menu:
 
         :return: _wrapper: all the functions are displayed together
         """
-        def _wraper(self) :
+        def _wraper(self):
             self._clear()
-            title = self.name if not self.escape else "Quit?"
+            title = "Quit?" if self.escape else self.name
             display = f"""
 {self.header:{self.border}^{self.width}}\n\n
 {colored(title, self.color["title"])}\n
@@ -270,6 +270,7 @@ class Menu:
 Version : {colored(version, self.color["version"])}\n
 {self.footer:{self.border}^{self.width}}"""
             return display.replace("\n", f"\n{' '*self.spaces}")
+
         return _wraper
 
     @_menu_display
@@ -305,7 +306,7 @@ Version : {colored(version, self.color["version"])}\n
         """
         # main loop
         while True:
-            print(self) if not self.escape else print(self.escape_menu())
+            print(self.escape_menu()) if self.escape else print(self)
             self.walk_next_menu_list(self.keyboard_process(error))
             error = None
 
